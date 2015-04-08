@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * Restrict Department Level Access
+ *
+ */
+
+class AdminRestrictDepartmentLevelAccess extends WireData implements Module {
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Restrict Department Level Access', 
+			'version' => 1, 
+			'summary' => 'Custom module restricts department_admin to their own department.',
+			'author' => 'alex rodriguez, horchatadesign.com',
+			'singular' => true,
+			'autoload' => true,
+			);
+	}
+
+	public function init() {
+	    if($this->user->hasPermission("page-edit") && !$this->user->hasRole("superuser"))
+	    	$this->addHookAfter("Page::editable", $this, 'editable'); // deny editing outside of department
+	    	$this->addHookAfter("Page::addable", $this, 'addable'); // deny adding pages outside of department
+
+	    
+	    	
+	}
+
+	public function editable(HookEvent $event) {
+		// abort if no access
+		if(!$event->return) return; 
+		
+		// get page
+		$page = $event->object; 
+
+		// criteria required in order to edit
+		if(!$this->user->hasRole("superuser") && $this->user->department != $page->department) $event->return = false;
+	}
+
+	
+
+	
+	public function addable(HookEvent $event) {
+		// get the parent of the page about to be created
+		$parent = $event->object;
+
+		// if($this->user->hasRole("superuser")) $event->return = true;
+
+		// check if user department == parent department, if not, stop.
+		if(!$this->user->hasRole("superuser") && $this->user->department != $parent->department) $event->return = false;
+		
+		
+	}
+	
+
+}
